@@ -1,0 +1,278 @@
+/* =========================
+   POPUP OVERLAY
+========================= */
+#country-popup {
+	position: fixed;
+	inset: 0;
+	background: rgba(0,0,0,.5);
+	z-index: 9999;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* =========================
+   POPUP BOX
+========================= */
+.popup-box {
+	background: #fff;
+	width: 420px;
+	padding: 20px;
+}
+
+/* =========================
+   POPUP TITLE
+========================= */
+.country-popup-title {
+	font-size: 16px;
+	text-align: center;
+	margin-bottom: 8px;
+}
+
+/* =========================
+   SELECTED COUNTRY
+========================= */
+#country-popup .selected-country {
+	border: 0.5px solid #000;
+	padding: 10px 8px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	text-transform: uppercase;
+	position: relative;
+	line-height: 27px;
+}
+#country-popup:has(.country.active) #confirm-country {
+	font-size: 0;
+/* 	cursor: pointer; */
+}
+#country-popup:has(.country.active) #confirm-country:after {
+	content:"CHANGE SHIPPING COUNTRY";
+	color: #fff;
+	font-size: 12px;
+	line-height: 28px;
+}
+/* =========================
+   TOGGLE ICON
+========================= */
+#toggle-selector {
+	position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+	display: flex;
+    justify-content: flex-end;
+    align-items: center;
+	padding-right: 7px;
+}
+#toggle-selector .selector-icon {
+	width: 15px;
+    height: 15px;
+	margin-top: -5px;
+}
+#toggle-selector.active svg {
+	transform: rotate(180deg);
+}
+
+/* =========================
+   CONTINENT LIST
+========================= */
+/* #continent-list {
+	border: 0.5px solid;
+    padding: 0 5px;
+    border-bottom: 0;
+} */
+#continent-list:hover .continent:not(:hover) .continent-title {
+	opacity:0.5;
+}
+.select-country-title {
+	text-transform: uppercase;
+    margin-bottom: 15px;
+    font-size: 11.5px;
+}
+.continent {
+	border-bottom: 0.5px solid #dadada;
+}
+.continent:last-child {
+	border-bottom:0;
+}
+.continent-title {
+	font-weight: normal;
+	cursor: pointer;
+	padding: 8px;
+	display: flex;
+	justify-content: space-between;
+	text-transform: uppercase;
+	line-height: 30px;
+}
+
+.continent-title .toggle {
+	width: 16px;
+	height: 30px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin-right: -0.5px;
+	opacity:1;
+}
+
+/* =========================
+   COUNTRY LIST
+========================= */
+.country-list {
+	display: none;
+	max-height: 160px;
+	overflow-y: auto;
+}
+
+.country {
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 6px 8px;
+	text-transform: uppercase;
+}
+
+.country:hover {
+	text-decoration: underline;
+}
+
+.country.active {
+	background: #000;
+	color: #fff;
+}
+
+/* =========================
+   SEARCH
+========================= */
+.country-search {
+	display: flex;
+	position: relative;
+}
+
+.country-search .icon-search {
+	position: absolute;
+	top: 47%;
+	transform: translateY(-50%);
+	left:7px;
+}
+
+#country-search {
+	border: 0;
+	height: 38px;
+	box-shadow: none;
+	padding: 0 0 0 25px;
+	background: transparent;
+	margin-bottom: 0;
+	border-bottom: 0.5px solid #000;
+}
+
+/* =========================
+   CONFIRM BUTTON
+========================= */
+#confirm-country {
+	width: 100%;
+	background: #000;
+	color: #fff;
+	padding: 12px;
+	border: none;
+	margin-top: 15px;
+	margin-bottom: 0;
+	height: 50px;
+}
+
+/* =========================
+   MS COUNTRY POPUP OVERRIDE
+========================= */
+/* #ms-country-popup {
+	padding-bottom: 0px;
+} */
+.ms-country-popup-content {
+	max-height: calc(100dvh - 90px);
+    overflow-y: auto;
+}
+#ms-country-popup .continent-title {
+	padding: 15px 20px 17px;
+	font-size: 13px;
+}
+#ms-country-popup .country {
+	padding: 6px 20px;
+	font-size: 13px;
+}
+#ms-country-popup .country .currency-label {
+	text-transform: none;
+}
+#ms-country-popup .country-popup-title {
+	text-align: left;
+	text-transform: uppercase;
+	padding: 14px 20px 10px;
+	border-bottom: 0.5px solid #dadada;
+	font-size: 13px;
+	font-weight: bold;
+	line-height: 24px;
+}
+
+#ms-country-popup .selected-country {
+	padding: 40px 20px 20px;
+	border-bottom: 0.5px solid #dadada;
+	text-transform: uppercase;
+	font-size: 13px;
+}
+#ms-country-popup .ms-country-label {
+	width: 50%;
+	display: inline-block;
+}
+#ms-country-popup .selected-country-name {
+	margin-bottom: 7px;
+}
+#ms-country-popup .selected-country span {
+	text-transform: uppercase;
+}
+
+#ms-country-popup .country-search {
+	padding: 0 20px;
+	border-bottom: 0.5px solid #000;
+}
+#ms-country-popup #country-search {
+	border-bottom:0;
+	padding-left: 17px;
+	height: 45px;
+	font-size: 13px;
+}
+#ms-country-popup .country-search .icon-search {
+	left:20px;
+}
+#ms-country-popup #continent-list,
+#ms-country-popup #country-search {
+	/* 	display: block !important; */
+}
+
+#ms-country-popup #confirm-country {
+	position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: calc(100% - 40px);
+    margin: 0;
+	background-color: #f3f3f3;
+	color: #000;
+	cursor: not-allowed;
+	pointer-events: none;
+}
+#ms-country-popup:has(.country.active) #confirm-country {
+	background-color: #000;
+	color: #fff;
+	font-size: 0;
+	cursor: pointer;
+	pointer-events: auto;
+}
+#ms-country-popup:has(.country.active) #confirm-country:after {
+	content:"CONFIRM";
+	font-size: 13px;
+	line-height: 28px;
+}
+
+html:has(#country-popup) {
+	overflow: hidden;
+}

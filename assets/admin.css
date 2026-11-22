@@ -1,0 +1,55 @@
+/* ============================
+   MS Country Popup – Admin CSS
+   ============================ */
+.ms-cp-admin h2 {
+	margin-top: 30px;
+	font-size: 1.3em;
+}
+.ms-cp-admin h3 {
+	margin-top: 20px;
+}
+.ms-cp-admin hr {
+	margin: 30px 0;
+	border-top: 1px solid #ccd0d4;
+}
+
+/* Repeater tables */
+.ms-cp-table {
+	border-collapse: collapse;
+	margin: 10px 0 8px;
+}
+.ms-cp-table th {
+	text-align: left;
+	padding: 8px 12px 8px 0;
+	font-weight: 600;
+}
+.ms-cp-table td {
+	padding: 4px 12px 4px 0;
+}
+.ms-cp-table input[type="text"],
+.ms-cp-table input[type="url"] {
+	width: 100%;
+}
+.ms-cp-table input[type="text"] {
+	max-width: 100px;
+}
+.ms-cp-table input[type="url"],
+.ms-cp-table .regular-text {
+	max-width: 320px;
+}
+
+/* Remove button */
+.ms-cp-remove-row {
+	color: #a00 !important;
+	border-color: #a00 !important;
+	min-width: 32px;
+}
+.ms-cp-remove-row:hover {
+	background: #a00 !important;
+	color: #fff !important;
+}
+
+/* Add button */
+.ms-cp-add-row {
+	margin-top: 4px !important;
+}

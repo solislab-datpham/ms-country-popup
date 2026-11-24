@@ -42,16 +42,6 @@
 	position: relative;
 	line-height: 27px;
 }
-#country-popup:has(.country.active) #confirm-country {
-	font-size: 0;
-/* 	cursor: pointer; */
-}
-#country-popup:has(.country.active) #confirm-country:after {
-	content:"CHANGE SHIPPING COUNTRY";
-	color: #fff;
-	font-size: 12px;
-	line-height: 28px;
-}
 /* =========================
    TOGGLE ICON
 ========================= */
@@ -83,7 +73,7 @@
     padding: 0 5px;
     border-bottom: 0;
 } */
-#continent-list:hover .continent:not(:hover) .continent-title {
+:is(#continent-list, #first-continent-list):hover .continent:not(:hover) .continent-title {
 	opacity:0.5;
 }
 .select-country-title {
@@ -144,6 +134,11 @@
 	color: #fff;
 }
 
+.country[data-code='VN'],
+:is(#selected-country-text, #first-selected-country-text)[data-country-code='VN'] {
+	text-transform: none;
+}
+
 /* =========================
    SEARCH
 ========================= */
@@ -159,7 +154,7 @@
 	left:7px;
 }
 
-#country-search {
+:is(#country-search, #first-country-search) {
 	border: 0;
 	height: 38px;
 	box-shadow: none;
@@ -172,15 +167,19 @@
 /* =========================
    CONFIRM BUTTON
 ========================= */
+#first-confirm-country,
 #confirm-country {
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	width: 100%;
-	background: #000;
-	color: #fff;
-	padding: 12px;
-	border: none;
+	height: 50px;
 	margin-top: 15px;
 	margin-bottom: 0;
-	height: 50px;
+	padding: 0 12px;
+	border: none;
+	background: #000;
+	color: #fff;
 }
 
 /* =========================
@@ -251,26 +250,16 @@
 
 #ms-country-popup #confirm-country {
 	position: absolute;
-    bottom: 20px;
-    right: 20px;
-    width: calc(100% - 40px);
-    margin: 0;
+	right: 20px;
+	bottom: 20px;
+	width: calc(100% - 40px);
+	margin: 0;
+}
+
+#ms-country-popup #confirm-country:disabled {
 	background-color: #f3f3f3;
 	color: #000;
 	cursor: not-allowed;
-	pointer-events: none;
-}
-#ms-country-popup:has(.country.active) #confirm-country {
-	background-color: #000;
-	color: #fff;
-	font-size: 0;
-	cursor: pointer;
-	pointer-events: auto;
-}
-#ms-country-popup:has(.country.active) #confirm-country:after {
-	content:"CONFIRM";
-	font-size: 13px;
-	line-height: 28px;
 }
 
 html:has(#country-popup) {

@@ -1,0 +1,7 @@
+{
+  "name": "ms-country-popup",
+  "private": true,
+  "scripts": {
+    "bundle": "node scripts/bundle.js"
+  }
+}

@@ -119,28 +119,28 @@ add_action('wp_footer', function () {
 	$text_search       = get_option('ms_cp_text_search', 'Type to search for country');
 	$text_button       = get_option('ms_cp_text_button', 'CHỌN QUỐC GIA');
 	?>
-	<div id="country-popup">
+	<div class="js-country-picker" id="country-popup">
 		<div class="popup-box">
 			<div class="select-country" style="display: none;">
 				<div class="country-popup-title"><?= esc_html($text_select_title) ?></div>
 				<div class="country-search">
 					<i class="icon-search" aria-hidden="true"></i>
-					<input type="text" id="country-search" placeholder="<?= esc_attr($text_search) ?>">
+					<input class="js-country-search" id="first-country-search" type="text" placeholder="<?= esc_attr($text_search) ?>">
 				</div>
-				<div id="continent-list"></div>
+				<div class="js-country-list" id="first-continent-list"></div>
 			</div>
 			<div class="select-country-title">
 				<?= esc_html($text_select_desc) ?>
 			</div>
 			<div class="selected-country">
-				<span id="selected-country-text"></span>
+				<span class="js-country-selected" id="first-selected-country-text"></span>
 				<div id="toggle-selector">
 					<div class="selector-icon">
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 15 15" aria-hidden="true" focusable="false"><path fill="currentColor" stroke="currentColor" stroke-width="1.2" d="m7.875 7.07-.19.062-.19-.063-1.46-.487 1.65 2.752.986-1.643.666-1.109-1.462.487Z"></path></svg>
 					</div>
 				</div>
 			</div>
-			<button id="confirm-country"><?= esc_html($text_button) ?></button>
+			<button class="js-country-confirm" id="first-confirm-country" type="button" data-selected-label="CHANGE SHIPPING COUNTRY"><?= esc_html($text_button) ?></button>
 		</div>
 	</div>
 	<?php
@@ -263,13 +263,13 @@ add_action('wp_footer', function () {
 	$text_search       = get_option('ms_cp_text_search', 'Type to search for country');
 	$text_button       = get_option('ms_cp_text_button', 'CHỌN QUỐC GIA');
 	?>
-	<div id="ms-country-popup" class="lightbox-by-id lightbox-content mfp-hide lightbox-white">
+	<div class="lightbox-by-id lightbox-content mfp-hide lightbox-white js-country-picker" id="ms-country-popup">
 		<div class="ms-country-popup-content">
 			<div class="country-popup-title"><?= esc_html($text_title) ?></div>
 			<div class="selected-country">
 				<div class="selected-country-name">
 					<span class="ms-country-label"><?= esc_html($text_country_lbl) ?></span>
-					<strong id="selected-country-text"></strong>
+					<strong class="js-country-selected" id="selected-country-text"></strong>
 				</div>
 				<div class="selected-country-language">
 					<span class="ms-country-label"><?= esc_html($text_lang_lbl) ?></span>
@@ -278,11 +278,11 @@ add_action('wp_footer', function () {
 			</div>
 			<div class="country-search">
 				<i class="icon-search" aria-hidden="true"></i>
-				<input type="text" id="country-search" placeholder="<?= esc_attr($text_search) ?>">
+				<input class="js-country-search" id="country-search" type="text" placeholder="<?= esc_attr($text_search) ?>">
 			</div>
-			<div id="continent-list"></div>
+			<div class="js-country-list" id="continent-list"></div>
 		</div>
-		<button id="confirm-country"><?= esc_html($text_button) ?></button>
+		<button class="js-country-confirm" id="confirm-country" type="button" data-selected-label="CONFIRM" disabled><?= esc_html($text_button) ?></button>
 	</div>
 	<?php
 });

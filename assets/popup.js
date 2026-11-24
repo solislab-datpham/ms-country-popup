@@ -27,7 +27,7 @@ jQuery(function ($) {
 	 * BASE COUNTRY MAP (manually overridden)
 	 * =============================== */
 	const countryMap = {
-		VN: 'Việt Nam',
+		VN: 'VietNam',
 		US: 'United States',
 		JP: 'Japan',
 		KR: 'South Korea',
@@ -83,7 +83,7 @@ jQuery(function ($) {
 		"Turkey": "TR","Turkmenistan": "TM","Tuvalu": "TV","Uganda": "UG","Ukraine": "UA",
 		"United Arab Emirates": "AE","United Kingdom": "GB","United States": "US",
 		"Uruguay": "UY","Uzbekistan": "UZ","Vanuatu": "VU","Vatican City": "VA",
-		"Venezuela": "VE","Việt Nam": "VN","Yemen": "YE","Zambia": "ZM","Zimbabwe": "ZW"
+		"Venezuela": "VE","VietNam": "VN","Yemen": "YE","Zambia": "ZM","Zimbabwe": "ZW"
 	};
 	/* ===============================
 	 * CONTINENTS
@@ -119,7 +119,7 @@ jQuery(function ($) {
 			"Mongolia","Myanmar","Nepal","North Korea","Oman","Pakistan",
 			"Philippines","Qatar","Saudi Arabia","Singapore","South Korea",
 			"Sri Lanka","Syria","Taiwan","Tajikistan","Thailand","Timor-Leste",
-			"Turkey","Turkmenistan","United Arab Emirates","Uzbekistan","Việt Nam",
+			"Turkey","Turkmenistan","United Arab Emirates","Uzbekistan","VietNam",
 			"Yemen"
 		],
 		Europe: [
@@ -154,21 +154,33 @@ jQuery(function ($) {
 	/* ===============================
 	 * STATE
 	 * =============================== */
-	const selectedISO = CountryPopup.confirmed || CountryPopup.geo || '';
-	let selectedCountry = selectedISO;
-	let selectorOpen = false;
-	/* ===============================
-	 * INIT
-	 * =============================== */
-	if (selectedCountry && countryMap[selectedCountry]) {
-		const name = countryMap[selectedCountry];
-		const currency = getCurrency(name);
-		$('#selected-country-text').text(`${name} / ${currency}`);
-	} else {
-		$('#selected-country-text').text('—');
-	}
-	// 	$('#country-search, #continent-list').hide();
-	render('');
+  const confirmedCountry = CountryPopup.confirmed || ''
+  const countryStorageKey = 'ms-cp-confirmed-country'
+  const $pickers = $('.js-country-picker')
+  let suggestedCountry = confirmedCountry || CountryPopup.geo || ''
+
+  function rememberCountry (country) {
+    try {
+      localStorage.setItem(countryStorageKey, country)
+    } catch {
+      // Country selection still works when storage is unavailable.
+    }
+  }
+
+  rememberCountry(confirmedCountry)
+
+  function showCountry ($picker, country) {
+    const name = countryMap[country]
+    $picker.find('.js-country-selected')
+      .attr('data-country-code', country)
+      .text(name ? `${name} / ${getCurrency(name)}` : '—')
+  }
+
+  $pickers.each(function () {
+    const $picker = $(this)
+    showCountry($picker, suggestedCountry)
+    render($picker)
+  })
 
 	/* ===============================
 	 * GEO PHÍA TRÌNH DUYỆT
@@ -187,146 +199,155 @@ jQuery(function ($) {
 				const currency = (countryRules[loc] && countryRules[loc].currency) || defaultCurrency;
 				// Nhãn trên header/footer ("VN / VND")
 				$('.ms-country-switcher').text(`${loc} / ${currency}`);
-				// Popup: chỉ đổi nếu khách chưa tự chọn nước khác
-				if (selectedCountry === selectedISO) {
-					selectedCountry = loc;
-					$('#selected-country-text').text(`${countryMap[loc]} / ${getCurrency(countryMap[loc])}`);
-				}
+        suggestedCountry = loc
+        $pickers.each(function () {
+          const $picker = $(this)
+          if (!$picker.data('chosenCountry')) showCountry($picker, loc)
+        })
 			})
 			.catch(() => {});
 	}
-	/* ===============================
-	 * TOGGLE SELECTOR
-	 * =============================== */
-	
-	
-	$('#toggle-selector').on('click', function () {
-		selectorOpen = !selectorOpen;
-		$('.select-country, .select-country-title').slideToggle(200);
-		$('#toggle-selector').toggleClass('active');
-// 		$(this).text(selectorOpen ? '▴' : '▾');
-	});
-	
-	
-	
-	/* ===============================
-	 * SEARCH
-	 * =============================== */
-	$('#country-search').on('input', function () {
-		render($(this).val());
-	});
-	/* ===============================
-	 * SELECT COUNTRY
-	 * =============================== */
-	$(document).on('click', '.country', function () {
-		selectedCountry = $(this).data('code');
-		const name = $(this).contents().first().text().trim();
-		const currency = getCurrency(name);
-		// Cập nhật text hiển thị trên nút
-		$('#selected-country-text').text(`${name} / ${currency}`);
-		// Xóa active toàn bộ, thêm active vào cái được chọn
-		$('.country').removeClass('active');
-		$(this).addClass('active');
-		$('.select-country, .select-country-title').slideToggle(200);
-	});
-	/* ===============================
-	 * CONFIRM
-	 * =============================== */
+  function toggleSelector ($picker, open) {
+    $picker.find('.select-country').stop(true, true)[open ? 'slideDown' : 'slideUp'](200)
+    $picker.find('.select-country-title').stop(true, true)[open ? 'slideUp' : 'slideDown'](200)
+    $picker.find('#toggle-selector').toggleClass('active', open)
+  }
 
-	$('#confirm-country').on('click', function () {
-		if (!selectedCountry) return;
-		const $btn = $(this);
-		$btn.prop('disabled', true).text('Saving...');
-		$.post(CountryPopup.ajax, {
-			action: 'ms_save_country',
-			country: selectedCountry
-		}).done(res => {
-			if (!res.success) {
-				alert('Save failed');
-				$btn.prop('disabled', false).text('XÁC NHẬN');
-				return;
-			}
-			const redirectUrl = res.data && res.data.redirect_url;
-			if (redirectUrl) {
-				// Kiểm tra redirect có khác domain hiện tại không
-				try {
-					const target = new URL(redirectUrl);
-					if (target.hostname !== window.location.hostname) {
-						window.location.href = redirectUrl;
-						return;
-					}
-				} catch (e) { /* invalid URL, fallback to reload */ }
-			}
-			location.reload();
-		}).fail(() => {
-			alert('Server error');
-			$btn.prop('disabled', false).text('XÁC NHẬN');
-		});
-	});
+  $('#toggle-selector').on('click', function () {
+    toggleSelector($(this).closest('.js-country-picker'), !$(this).hasClass('active'))
+  })
+
+  $pickers.on('input', '.js-country-search', function () {
+    render($(this).closest('.js-country-picker'), this.value)
+  })
+
+  $pickers.on('click', '.country', function () {
+    const $picker = $(this).closest('.js-country-picker')
+    if ($picker.data('saving')) return
+    const country = this.dataset.code
+    $picker.data('chosenCountry', country)
+    showCountry($picker, country)
+    $picker.find('.country.active').removeClass('active')
+    $(this).addClass('active')
+    const $button = $picker.find('.js-country-confirm')
+    $button.prop('disabled', false).text($button.data('selectedLabel'))
+    if ($picker.is('#country-popup')) toggleSelector($picker, false)
+  })
+
+  $pickers.on('click', '.js-country-confirm', function () {
+    const $btn = $(this)
+    if ($btn.prop('disabled')) return
+    const $picker = $btn.closest('.js-country-picker')
+    const firstVisit = $picker.is('#country-popup')
+    const country = $picker.data('chosenCountry') || (firstVisit ? suggestedCountry : '')
+    if (!countryMap[country]) {
+      if (firstVisit) {
+        toggleSelector($picker, true)
+        $picker.find('.js-country-search').trigger('focus')
+      }
+      return
+    }
+    const buttonLabel = $btn.text()
+    $picker.data('saving', true)
+    function restoreButton () {
+      $picker.removeData('saving')
+      $btn.prop('disabled', false).text(buttonLabel)
+    }
+
+    $btn.prop('disabled', true).text('Saving...')
+    $.post(CountryPopup.ajax, {
+      action: 'ms_save_country',
+      country
+    }).done(res => {
+      if (!res.success) {
+        alert('Save failed')
+        restoreButton()
+        return
+      }
+      const redirectUrl = res.data && res.data.redirect_url
+      if (redirectUrl) {
+        try {
+          const target = new URL(redirectUrl)
+          if (target.hostname !== window.location.hostname) {
+            window.location.href = redirectUrl
+            return
+          }
+        } catch (e) { /* invalid URL, fallback to reload */ }
+      }
+      rememberCountry(country)
+      location.reload()
+    }).fail(() => {
+      alert('Server error')
+      restoreButton()
+    })
+  })
 
 	/* ===============================
 	 * RENDER CONTINENTS
 	 * =============================== */
-	function render(keyword = '') {
-		let html = '';
-		keyword = keyword.toLowerCase().trim();
-		let autoOpened = false;
-		$.each(continents, function (continent, countries) {
-			const matches = countries.filter(c =>
-											 c.toLowerCase().includes(keyword)
-											).sort();
-			if (!matches.length) return;
-			let autoOpen = keyword && !autoOpened && matches.length <= 2;
-			if (autoOpen) autoOpened = true;
-			html += `
+  function normalizeCountrySearch (value) {
+    return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f\s]/g, '')
+  }
+
+  function render ($picker, keyword = '') {
+    let html = ''
+    const query = normalizeCountrySearch(keyword)
+    const selectedCountry = $picker.data('chosenCountry')
+
+    let autoOpened = false
+    $.each(continents, function (continent, countries) {
+      const matches = countries.filter(name => normalizeCountrySearch(name).includes(query)).sort()
+      if (!matches.length) return
+      const autoOpen = query && !autoOpened && matches.length <= 2
+      if (autoOpen) autoOpened = true
+      html += `
 <div class="continent ${autoOpen ? 'open' : ''}">
 <div class="continent-title">
 ${continent}
-<span class="toggle">${autoOpen ? '<svg xmlns="http://www.w3.org/2000/svg" id="minus" viewBox="0 0 17 17"><path fill-rule="evenodd" d="M4.14999 8.15039H12.35v1.2H4.14999v-1.2Z"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" id="plus-small" viewBox="0 0 17 17"><path fill-rule="evenodd" d="M9.25 5.25v7h-1v-7h1Z"/><path fill-rule="evenodd" d="M5.24998 8.25H12.25v1H5.24998v-1Z"/></svg>'}</span>
+<span class="toggle">${autoOpen ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17"><path fill-rule="evenodd" d="M4.14999 8.15039H12.35v1.2H4.14999v-1.2Z"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17"><path fill-rule="evenodd" d="M9.25 5.25v7h-1v-7h1Z"/><path fill-rule="evenodd" d="M5.24998 8.25H12.25v1H5.24998v-1Z"/></svg>'}</span>
 </div>
 <div class="country-list" style="display:${autoOpen ? 'block' : 'none'}">
-`;
-			matches.forEach(name => {
-				const iso = countryToCode[name] || '';
-				const currency = getCurrency(name);
-				html += `
-<div class="country" data-code="${iso}">
+`
+      matches.forEach(name => {
+        const iso = countryToCode[name] || ''
+        const currency = getCurrency(name)
+        html += `
+<div class="country${iso === selectedCountry ? ' active' : ''}" data-code="${iso}">
 ${name} <span class="currency-label">${currency}</span>
-</div>`;
-			});
-			html += `</div></div>`;
-		});
+</div>`
+      })
+      html += `</div></div>`
+    })
 
-		$('#continent-list').html(html);
-	}
-	/* ===============================
-	 * ACCORDION (1 OPEN ONLY)
-	 * =============================== */
-	$(document).on('click', '.continent-title', function () {
-		const $list = $(this).next('.country-list');
-		const isOpen = $list.is(':visible');
-		$('.country-list:visible').slideUp(150);
-		$('.continent-title .toggle').html('<svg xmlns="http://www.w3.org/2000/svg" id="plus-small" viewBox="0 0 17 17"><path fill-rule="evenodd" d="M9.25 5.25v7h-1v-7h1Z"/><path fill-rule="evenodd" d="M5.24998 8.25H12.25v1H5.24998v-1Z"/></svg>');
-		if (!isOpen) {
-			$list.slideDown(150);
-			$(this).find('.toggle').html('<svg xmlns="http://www.w3.org/2000/svg" id="minus" viewBox="0 0 17 17"><path fill-rule="evenodd" d="M4.14999 8.15039H12.35v1.2H4.14999v-1.2Z"/></svg>');
-		}
-	});
-	/* ===============================
-	 * FLATSOME LIGHTBOX OPEN
-	 * =============================== */
-	$(document).on('mfpOpen', function () {
-		$('#country-search, #continent-list').show();
-		render('');
-	});
+    $picker.find('.js-country-list').html(html)
+  }
+  /* ===============================
+   * ACCORDION (1 OPEN ONLY)
+   * =============================== */
+  $pickers.on('click', '.continent-title', function () {
+    const $picker = $(this).closest('.js-country-picker')
+    const $list = $(this).next('.country-list')
+    const isOpen = $list.is(':visible')
+    $picker.find('.country-list:visible').slideUp(150)
+    $picker.find('.continent-title .toggle').html('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17"><path fill-rule="evenodd" d="M9.25 5.25v7h-1v-7h1Z"/><path fill-rule="evenodd" d="M5.24998 8.25H12.25v1H5.24998v-1Z"/></svg>')
+    if (!isOpen) {
+      $list.slideDown(150)
+      $(this).find('.toggle').html('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17"><path fill-rule="evenodd" d="M4.14999 8.15039H12.35v1.2H4.14999v-1.2Z"/></svg>')
+    }
+  })
+  window.addEventListener('pageshow', function (event) {
+    if (!event.persisted) return
 
-	/* ===============================
-	 * FIX BROWSER BACK BUTTON (BFCACHE)
-	 * =============================== */
-	$(window).on('pageshow', function (event) {
-		if (event.originalEvent && event.originalEvent.persisted) {
-			window.location.reload();
-		}
-	});
+    let latestCountry
+    try {
+      latestCountry = localStorage.getItem(countryStorageKey)
+    } catch {
+      return
+    }
+
+    if (latestCountry !== null && latestCountry !== confirmedCountry) {
+      location.reload()
+    }
+  })
 
 });

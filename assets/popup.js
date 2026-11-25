@@ -27,7 +27,7 @@ jQuery(function ($) {
 	 * BASE COUNTRY MAP (manually overridden)
 	 * =============================== */
 	const countryMap = {
-		VN: 'VietNam',
+		VN: 'VIETNAM',
 		US: 'United States',
 		JP: 'Japan',
 		KR: 'South Korea',
@@ -83,7 +83,7 @@ jQuery(function ($) {
 		"Turkey": "TR","Turkmenistan": "TM","Tuvalu": "TV","Uganda": "UG","Ukraine": "UA",
 		"United Arab Emirates": "AE","United Kingdom": "GB","United States": "US",
 		"Uruguay": "UY","Uzbekistan": "UZ","Vanuatu": "VU","Vatican City": "VA",
-		"Venezuela": "VE","VietNam": "VN","Yemen": "YE","Zambia": "ZM","Zimbabwe": "ZW"
+		"Venezuela": "VE","VIETNAM": "VN","Yemen": "YE","Zambia": "ZM","Zimbabwe": "ZW"
 	};
 	/* ===============================
 	 * CONTINENTS
@@ -119,7 +119,7 @@ jQuery(function ($) {
 			"Mongolia","Myanmar","Nepal","North Korea","Oman","Pakistan",
 			"Philippines","Qatar","Saudi Arabia","Singapore","South Korea",
 			"Sri Lanka","Syria","Taiwan","Tajikistan","Thailand","Timor-Leste",
-			"Turkey","Turkmenistan","United Arab Emirates","Uzbekistan","VietNam",
+			"Turkey","Turkmenistan","United Arab Emirates","Uzbekistan","VIETNAM",
 			"Yemen"
 		],
 		Europe: [
@@ -154,7 +154,8 @@ jQuery(function ($) {
 	/* ===============================
 	 * STATE
 	 * =============================== */
-  const confirmedCountry = CountryPopup.confirmed || ''
+  // Read in the browser: a cached page cannot carry this visitor's country.
+  const confirmedCountry = (document.cookie.match(/(?:^|;\s*)confirmed_country=([A-Z]{2})(?:;|$)/) || [])[1] || ''
   const countryStorageKey = 'ms-cp-confirmed-country'
   const $pickers = $('.js-country-picker')
   let suggestedCountry = confirmedCountry || CountryPopup.geo || ''
@@ -168,11 +169,19 @@ jQuery(function ($) {
   }
 
   rememberCountry(confirmedCountry)
+  document.documentElement.classList.toggle('is-country-unconfirmed', !confirmedCountry)
+
+  function showSwitcherLabel (country) {
+    if (!countryMap[country]) return
+    const currency = (countryRules[country] && countryRules[country].currency) || defaultCurrency
+    $('.ms-country-switcher').text(`${country} / ${currency}`)
+  }
+
+  showSwitcherLabel(suggestedCountry)
 
   function showCountry ($picker, country) {
     const name = countryMap[country]
     $picker.find('.js-country-selected')
-      .attr('data-country-code', country)
       .text(name ? `${name} / ${getCurrency(name)}` : '—')
   }
 
@@ -189,16 +198,14 @@ jQuery(function ($) {
 	 * người đang xem -> lấy lại nước thật từ Cloudflare (/cdn-cgi/trace).
 	 * Chỉ áp dụng khi chưa xác nhận quốc gia (không có cookie).
 	 * =============================== */
-	if (!CountryPopup.confirmed) {
+	if (!confirmedCountry) {
 		fetch('/cdn-cgi/trace', { credentials: 'omit', cache: 'no-store' })
 			.then(r => r.ok ? r.text() : '')
 			.then(txt => {
 				const m = /^loc=([A-Z]{2})$/m.exec(txt || '');
 				const loc = m ? m[1] : '';
 				if (!loc || loc === 'XX' || !countryMap[loc]) return;
-				const currency = (countryRules[loc] && countryRules[loc].currency) || defaultCurrency;
-				// Nhãn trên header/footer ("VN / VND")
-				$('.ms-country-switcher').text(`${loc} / ${currency}`);
+				showSwitcherLabel(loc)
         suggestedCountry = loc
         $pickers.each(function () {
           const $picker = $(this)

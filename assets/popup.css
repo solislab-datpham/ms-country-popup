@@ -6,9 +6,19 @@
 	inset: 0;
 	background: rgba(0,0,0,.5);
 	z-index: 9999;
-	display: flex;
+	display: none;
 	align-items: center;
 	justify-content: center;
+}
+
+/* The markup ships on every (cached) page; only unconfirmed visitors see it. */
+.is-country-unconfirmed #country-popup {
+	display: flex;
+}
+
+/* The label is printed in the browser, so the link stays out of the layout until then. */
+.ms-country-switcher:empty {
+	display: none;
 }
 
 /* =========================
@@ -132,11 +142,6 @@
 .country.active {
 	background: #000;
 	color: #fff;
-}
-
-.country[data-code='VN'],
-:is(#selected-country-text, #first-selected-country-text)[data-country-code='VN'] {
-	text-transform: none;
 }
 
 /* =========================

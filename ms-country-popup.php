@@ -2,7 +2,7 @@
 /**
  * Plugin Name: MS Country Select Popup
  * Description: Popup chọn quốc gia theo IP (Cloudflare GeoIP) + WooCommerce
- * Version: 1.2.6
+ * Version: 1.3.0
  */
 
 if ( ! defined('ABSPATH') ) exit;
@@ -14,22 +14,29 @@ if ( is_admin() ) {
 	require_once plugin_dir_path(__FILE__) . 'admin-settings.php';
 }
 
-function ms_cp_vary_by_country( $cookies ) {
-	if ( ! in_array( 'confirmed_country', $cookies, true ) ) {
-		$cookies[] = 'confirmed_country';
-	}
-	return $cookies;
-}
-add_filter( 'litespeed_vary_cookies', 'ms_cp_vary_by_country' );
-add_filter( 'litespeed_vary_curr_cookies', 'ms_cp_vary_by_country' );
-
+/*
+ * Page-cache contract: the HTML is identical for every visitor. The browser reads the
+ * confirmed_country cookie and decides whether to show the popup and which label to print,
+ * so a cached page never replays another visitor's (or the anonymous) country state.
+ */
 function ms_cp_prevent_country_response_cache() {
-	do_action( 'litespeed_control_set_nocache', 'Country selection changes the cache vary cookie' );
+	do_action( 'litespeed_control_set_nocache', 'Country selection sets a cookie' );
 	nocache_headers();
 }
 
 function ms_cp_set_confirmed_country( $country ) {
-	$saved = setcookie( 'confirmed_country', $country, time() + 30 * DAY_IN_SECONDS, '/', '', is_ssl(), true );
+	// Readable by JavaScript on purpose: cached pages cannot ask PHP for it.
+	$saved = setcookie(
+		'confirmed_country',
+		$country,
+		array(
+			'expires'  => time() + 30 * DAY_IN_SECONDS,
+			'path'     => '/',
+			'secure'   => is_ssl(),
+			'httponly' => false,
+			'samesite' => 'Lax',
+		)
+	);
 	if ( $saved ) {
 		$_COOKIE['confirmed_country'] = $country;
 	}
@@ -80,6 +87,14 @@ add_action('wp_enqueue_scripts', function () {
 		file_exists($css_path) ? filemtime($css_path) : null
 	);
 
+	// Decide before first paint, so confirmed visitors never see the popup flash.
+	wp_register_script( 'country-popup-state', false, [], null, false );
+	wp_enqueue_script( 'country-popup-state' );
+	wp_add_inline_script(
+		'country-popup-state',
+		"document.documentElement.classList.toggle('is-country-unconfirmed',!/(?:^|;\\s*)confirmed_country=[A-Z]{2}(?:;|$)/.test(document.cookie))"
+	);
+
 	wp_enqueue_script(
 		'country-popup-js',
 		plugin_dir_url(__FILE__) . 'assets/popup.js',
@@ -97,7 +112,6 @@ add_action('wp_enqueue_scripts', function () {
 
 	wp_localize_script('country-popup-js', 'CountryPopup', [
 		'ajax'            => admin_url('admin-ajax.php'),
-		'confirmed'       => $_COOKIE['confirmed_country'] ?? '',
 		'geo'             => ms_get_geo_country(),
 		'defaultDomain'   => $default_domain,
 		'defaultCurrency' => $default_currency,
@@ -109,11 +123,6 @@ add_action('wp_enqueue_scripts', function () {
  * Popup HTML
  * ===================================================== */
 add_action('wp_footer', function () {
-	// ✅ CHỈ ẨN KHI USER ĐÃ CONFIRM
-	if ( ! empty($_COOKIE['confirmed_country']) ) {
-		return;
-	}
-
 	$text_select_title = get_option('ms_cp_text_select_title', 'Select your country to continue');
 	$text_select_desc  = get_option('ms_cp_text_select_desc', 'Please select your shipping location to continue to our online store.');
 	$text_search       = get_option('ms_cp_text_search', 'Type to search for country');
@@ -184,7 +193,6 @@ function ms_save_country() {
 		if ( ! ms_cp_set_confirmed_country( $country ) ) {
 			wp_send_json_error();
 		}
-		do_action( 'litespeed_vary_ajax_force' );
 		// ✅ WooCommerce sync
 		if ( function_exists('WC') && WC()->customer ) {
 			WC()->customer->set_billing_country( $country );
@@ -233,24 +241,8 @@ add_action('woocommerce_init', function () {
  * Shortcode: Country switcher (VN / VND)
  * ===================================================== */
 add_shortcode('ms_country_switcher', function () {
-	$country = $_COOKIE['confirmed_country'] ?? ms_get_geo_country();
-	if ( ! $country ) return '';
-	
-	$country_rules    = get_option('ms_cp_country_rules', []);
-	$default_currency = get_option('ms_cp_default_currency', 'USD');
-	
-	$currency = $default_currency;
-	if ( is_array($country_rules) && isset($country_rules[$country]) && !empty($country_rules[$country]['currency']) ) {
-		$currency = $country_rules[$country]['currency'];
-	}
-
-	ob_start(); ?>
-	<a href="#ms-country-popup"
-	   class="ms-country-switcher ux-lightbox">
-		<?= esc_html($country) ?> / <?= esc_html($currency) ?>
-	</a>
-	<?php
-	return ob_get_clean();
+	// Empty on purpose: popup.js prints "VN / VND" from the visitor's own cookie.
+	return '<a class="ms-country-switcher ux-lightbox js-country-switcher" href="#ms-country-popup"></a>';
 });
 /* =====================================================
  * Popup content (Flatsome Lightbox)

@@ -267,6 +267,6 @@
 	cursor: not-allowed;
 }
 
-html:has(#country-popup) {
+html.is-country-unconfirmed:has(#country-popup) {
 	overflow: hidden;
 }
